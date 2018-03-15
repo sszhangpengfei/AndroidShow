@@ -6,6 +6,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.zpf.androidshow.MainActivity">
+    <LinearLayout
+        android:id="@+id/information"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/line2_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VLC Open"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/line2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="15sp" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/start_record"

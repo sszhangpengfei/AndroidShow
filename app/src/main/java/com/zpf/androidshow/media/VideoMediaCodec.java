@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
 
+import com.zpf.androidshow.MainActivity;
 import com.zpf.androidshow.screen.Constant;
 
 import java.io.BufferedOutputStream;
@@ -48,7 +49,7 @@ public class VideoMediaCodec extends MediaCodecBase {
      *
      * **/
     public VideoMediaCodec(){
-        createfile();
+        //createfile();
         prepare();
     }
 
@@ -105,17 +106,24 @@ public class VideoMediaCodec extends MediaCodecBase {
                     if(mBufferInfo.flags == 2){
                         configbyte = new byte[mBufferInfo.size];
                         configbyte = outData;
-                    }else if(mBufferInfo.flags == 1){
+                    }
+//                    else{
+//                        MainActivity.putData(outData,2,mBufferInfo.presentationTimeUs*1000L);
+//                    }
+
+                    else if(mBufferInfo.flags == 1){
                         byte[] keyframe = new byte[mBufferInfo.size + configbyte.length];
                         System.arraycopy(configbyte, 0, keyframe, 0, configbyte.length);
                         System.arraycopy(outData, 0, keyframe, configbyte.length, outData.length);
-                        if(outputStream != null){
-                            outputStream.write(keyframe, 0, keyframe.length);
-                        }
+                        MainActivity.putData(keyframe,1,mBufferInfo.presentationTimeUs*1000L);
+//                        if(outputStream != null){
+//                            outputStream.write(keyframe, 0, keyframe.length);
+//                        }
                     }else{
-                        if(outputStream != null){
-                            outputStream.write(outData, 0, outData.length);
-                        }
+                        MainActivity.putData(outData,2,mBufferInfo.presentationTimeUs*1000L);
+//                        if(outputStream != null){
+//                            outputStream.write(outData, 0, outData.length);
+//                        }
                     }
                     mEncoder.releaseOutputBuffer(outputBufferIndex, false);
                     outputBufferIndex = mEncoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_USEC);
@@ -132,12 +140,12 @@ public class VideoMediaCodec extends MediaCodecBase {
         } catch (Exception e){
             e.printStackTrace();
         }
-        try {
-            outputStream.flush();
-            outputStream.close();
-            outputStream = null;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            outputStream.flush();
+//            outputStream.close();
+//            outputStream = null;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }

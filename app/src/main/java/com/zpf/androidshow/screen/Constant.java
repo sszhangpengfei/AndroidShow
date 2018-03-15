@@ -14,9 +14,9 @@ public class Constant {
 
     public static final int VIDEO_DPI = 1;
 
-    public static final int VIDEO_BITRATE = 800000;
+    public static final int VIDEO_BITRATE = 500000;
 
-    public static final int VIDEO_FRAMERATE = 20;
+    public static final int VIDEO_FRAMERATE = 15;
 
     public static final int VIDEO_IFRAME_INTER = 5;
 
