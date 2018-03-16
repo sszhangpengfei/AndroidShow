@@ -52,9 +52,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean isRecording = false;
 
-    private static int yuvqueuesize = 10;
-    public static ArrayBlockingQueue<h264data> h264Queue = new ArrayBlockingQueue<>(yuvqueuesize);
+    private static int queuesize = 30;
+    public static ArrayBlockingQueue<h264data> h264Queue = new ArrayBlockingQueue<>(queuesize);
     private RtspServer mRtspServer;
+    private String RtspAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         InitView();
         InitMPManager();
-        displayIpAddress();
+        RtspAddress = displayIpAddress();
+        if(RtspAddress != null){
+            line2.setText(RtspAddress);
+        }
     }
 
     private ServiceConnection mRtspServiceConnection = new ServiceConnection() {
@@ -76,14 +80,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onServiceDisconnected(ComponentName name) {}
-
     };
 
     @Override
     protected void onResume(){
         super.onResume();
-
-
     }
 
     private RtspServer.CallbackListener mRtspCallbackListener = new RtspServer.CallbackListener() {
@@ -102,20 +103,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onMessage(RtspServer server, int message) {
             if (message==RtspServer.MESSAGE_STREAMING_STARTED) {
-//                if (mAdapter != null && mAdapter.getHandsetFragment() != null)
-//                    mAdapter.getHandsetFragment().update();
-
+                Toast.makeText(MainActivity.this,"RTSP STREAM STARTED",Toast.LENGTH_SHORT).show();
             } else if (message==RtspServer.MESSAGE_STREAMING_STOPPED) {
-//                if (mAdapter != null && mAdapter.getHandsetFragment() != null)
-//                    mAdapter.getHandsetFragment().update();
+                Toast.makeText(MainActivity.this,"RTSP STREAM STOPPED",Toast.LENGTH_SHORT).show();
             }
         }
-
     };
 
 
     public static void putData(byte[] buffer, int type,long ts) {
-        if (h264Queue.size() >= 10) {
+        if (h264Queue.size() >= queuesize) {
             h264Queue.poll();
         }
         h264data data = new h264data();
@@ -148,10 +145,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 开始截屏
      * **/
     private void StartScreenCapture(){
-        isRecording = true;
-        Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
-        startActivityForResult(captureIntent, REQUEST_CODE_A);
-        bindService(new Intent(this,RtspServer.class), mRtspServiceConnection, Context.BIND_AUTO_CREATE);
+        if(RtspAddress != null && !RtspAddress.isEmpty()){
+            isRecording = true;
+            Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
+            startActivityForResult(captureIntent, REQUEST_CODE_A);
+            bindService(new Intent(this,RtspServer.class), mRtspServiceConnection, Context.BIND_AUTO_CREATE);
+        }else{
+            Toast.makeText(this,"网络连接异常！",Toast.LENGTH_SHORT).show();
+        }
     }
 
 
@@ -161,7 +162,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void StopScreenCapture(){
         isRecording = false;
         mScreenRecord.release();
-        if (mRtspServer != null) mRtspServer.removeCallbackListener(mRtspCallbackListener);
+        if (mRtspServer != null)
+            mRtspServer.removeCallbackListener(mRtspCallbackListener);
         unbindService(mRtspServiceConnection);
     }
 
@@ -179,13 +181,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             mScreenRecord = new ScreenRecord(this,mediaProjection);
             mScreenRecord.start();
-
-
         }
         catch (Exception e){
 
         }
-
     }
 
 
@@ -203,17 +202,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private void displayIpAddress() {
+    /**
+     * 先判断网络情况是否良好
+     * */
+    private String displayIpAddress() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = wifiManager.getConnectionInfo();
         String ipaddress = null;
         if (info!=null && info.getNetworkId()>-1) {
             int i = info.getIpAddress();
             String ip = String.format(Locale.ENGLISH,"%d.%d.%d.%d", i & 0xff, i >> 8 & 0xff,i >> 16 & 0xff,i >> 24 & 0xff);
-            line2.setText("rtsp://");
-            line2.append(ip);
-            line2.append(":8086");
+            ipaddress += "rtsp://";
+            ipaddress += ip;
+            ipaddress += RtspServer.DEFAULT_RTSP_PORT;
         }
-
+        return ipaddress;
     }
 }

@@ -41,7 +41,7 @@ public class RtspServer extends Service {
     public static String SERVER_NAME = "MajorKernelPanic RTSP Server";
 
     /** Port used by default. */
-    public static final int DEFAULT_RTSP_PORT = 8086;
+    public static final int DEFAULT_RTSP_PORT = 554;
 
     /** Port already in use. */
     public final static int ERROR_BIND_FAILED = 0x00;
