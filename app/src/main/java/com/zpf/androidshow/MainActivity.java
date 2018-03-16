@@ -103,9 +103,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onMessage(RtspServer server, int message) {
             if (message==RtspServer.MESSAGE_STREAMING_STARTED) {
-                Toast.makeText(MainActivity.this,"RTSP STREAM STARTED",Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(MainActivity.this,"RTSP STREAM STARTED",Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else if (message==RtspServer.MESSAGE_STREAMING_STOPPED) {
-                Toast.makeText(MainActivity.this,"RTSP STREAM STOPPED",Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(MainActivity.this,"RTSP STREAM STOPPED",Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         }
     };
@@ -208,12 +216,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String displayIpAddress() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = wifiManager.getConnectionInfo();
-        String ipaddress = null;
+        String ipaddress = "";
         if (info!=null && info.getNetworkId()>-1) {
             int i = info.getIpAddress();
             String ip = String.format(Locale.ENGLISH,"%d.%d.%d.%d", i & 0xff, i >> 8 & 0xff,i >> 16 & 0xff,i >> 24 & 0xff);
             ipaddress += "rtsp://";
             ipaddress += ip;
+            ipaddress += ":";
             ipaddress += RtspServer.DEFAULT_RTSP_PORT;
         }
         return ipaddress;
