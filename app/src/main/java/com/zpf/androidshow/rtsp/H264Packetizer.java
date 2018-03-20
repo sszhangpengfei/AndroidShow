@@ -176,7 +176,7 @@ public class H264Packetizer extends AbstractPacketizer implements Runnable {
 			header[4] = header[0];
 			ts = ((ScreenInputStream)is). getLastts();
 			//ts += delay;
-			naluLength = is.available()+1;
+			naluLength = is.available();
 		}
 
 		// Parses the NAL unit type

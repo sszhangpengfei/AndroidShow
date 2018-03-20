@@ -209,9 +209,7 @@ public abstract class MediaStream implements Stream {
 	
 	/** Starts the stream. */
 	public synchronized void start() throws IllegalStateException, IOException {
-
 		encodeWithMediaCodec();
-
 	}
 
 	/** Stops the stream. */
