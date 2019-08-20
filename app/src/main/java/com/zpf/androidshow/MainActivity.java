@@ -5,13 +5,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -56,17 +60,76 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static ArrayBlockingQueue<h264data> h264Queue = new ArrayBlockingQueue<>(queuesize);
     private RtspServer mRtspServer;
     private String RtspAddress;
+    private final static int PERMISSIONS_OK = 10001;
+    private static String[] PERMISSIONS_STORAGE = {
+            "android.permission.RECORD_AUDIO",
+            "android.permission.CAMERA",
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE" };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         InitView();
+        if (Build.VERSION.SDK_INT>22) {
+            if (!checkPermissionAllGranted(PERMISSIONS_STORAGE)) {
+                //先判断有没有权限 ，没有就在这里进行权限的申请
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        PERMISSIONS_STORAGE, PERMISSIONS_OK);
+            }else{
+                init();
+            }
+        }else{
+            init();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_OK:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //这里已经获取到了摄像头的权限，想干嘛干嘛了可以
+                    init();
+                } else {
+                    showWaringDialog();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void showWaringDialog() {
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setTitle("警告！")
+                .setMessage("请前往设置->应用->PermissionDemo->权限中打开相关权限，否则功能无法正常运行！")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // 一般情况下如果用户不授权的话，功能是无法运行的，做退出处理
+                        finish();
+                    }
+                }).show();
+    }
+
+    private void init(){
         InitMPManager();
         RtspAddress = displayIpAddress();
         if(RtspAddress != null){
             line2.setText(RtspAddress);
         }
+    }
+
+    private boolean checkPermissionAllGranted(String[] permissions) {
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                // 只要有一个权限没有被授予, 则直接返回 false
+                return false;
+            }
+        }
+        return true;
     }
 
     private ServiceConnection mRtspServiceConnection = new ServiceConnection() {
